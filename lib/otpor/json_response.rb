@@ -28,7 +28,7 @@ module Otpor
 
       @meta ||= infer_meta
 
-      render template: 'shared/response', formats: :json, status: @status_code
+      render template: "shared/response", formats: :json, status: @status_code
     end
 
     private
@@ -48,7 +48,7 @@ module Otpor
       }
       @errors ||= RequestStore.store[:errors] || nil
       @exception_log = [{ message: e.message, backtrace: e.backtrace[0, 5] }] if Rails.env.development?
-      render template: 'shared/response', formats: :json, status: @status_code
+      render template: "shared/response", formats: :json, status: @status_code
     end
 
     def determine_status_code(exception)
@@ -88,7 +88,8 @@ module Otpor
     def capture_new_instance_variables
       current_instance_variables = instance_variables
       new_vars = current_instance_variables - @initial_instance_variables
-      new_vars = new_vars - [:@initial_instance_variables, :@errors, :@notes, :@data_partial, :@status, :@_response_body, :@new_instance_variables]
+      new_vars -= %i[@initial_instance_variables @errors @notes @data_partial @status
+                     @_response_body @new_instance_variables]
       new_instance_vars = {}
       new_vars.each do |var|
         new_instance_vars[var] = instance_variable_get(var)
