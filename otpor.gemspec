@@ -41,12 +41,12 @@ Gem::Specification.new do |spec|
 
   spec.name          = "otpor"
   spec.version       = Otpor::VERSION
-  spec.authors       = ["Your Name"]
-  spec.email         = ["your.email@example.com"]
+  spec.authors       = ["Renan Garcia"]
+  spec.email         = ["renan.almeida.garcia@icloud.com"]
 
-  spec.summary       = %q{A gem that provides a JSON response template for Rails controllers}
+  spec.summary       = %q{Otpor: JSON Response Concern}
   spec.description   = %q{This gem includes a concern that defines a default Jbuilder template for controller actions that include it, rendering consistent JSON responses.}
-  spec.homepage      = "http://example.com/otpor"
+  spec.homepage      = "https://github.com/renan-garcia/otpor"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*"]

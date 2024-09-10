@@ -1,39 +1,135 @@
 # Otpor
 
-TODO: Delete this and the text below, and describe your gem
+A gem `otpor` foi desenvolvida para auxiliar no desenvolvimento de aplicações API em Rails, padronizando as respostas JSON. Ela facilita o tratamento de exceções, a customização de status e mensagens de erro, e a inclusão de metadados como paginação nas respostas.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/otpor`. To experiment with that code, run `bin/console` for an interactive prompt.
 
-## Installation
+## Instalação
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+Adicionando em sua Gemfile:
 
-Install the gem and add to the application's Gemfile by executing:
+```ruby
+gem 'otpor'
+```
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+Ou instale você mesmo:
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+    $ gem install otpor
 
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+## Exemplos de uso
+### Em seu controlador
+#### Inclua o módulo `Otpor::JsonResponse` em seu controlador
 
-## Usage
+```ruby
+    class FakesController < ApplicationController
+        include Otpor::JsonResponse
 
-TODO: Write usage instructions here
+        def my_action
+            @my_variable = "Hello from FakeController"
+            render json: { my_variable: @my_variable }
+        end
+    end
+```
 
-## Development
+### Tratamento de exceções
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+```ruby
+    class FakesController < ApplicationController
+        include Otpor::JsonResponse
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+        def my_action
+            raise ActiveRecord::RecordNotFound, "Registro não encontrado"
+        end
+    end
+```
 
-## Contributing
+### Teste RSpec
+    
+```ruby
+    RSpec.describe "Responses", type: :request do
+        it "retorna a resposta padrão em JSON usando a gem" do
+            get "/my_action", headers: { "Accept" => "application/json" }
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/otpor. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/otpor/blob/main/CODE_OF_CONDUCT.md).
+            json_response = JSON.parse(response.body)
 
-## License
+            expect(json_response["status"]["name"]).to eq("OK")
+            expect(json_response["status"]["code"]).to eq(200)
+            expect(json_response["status"]["type"]).to eq("Success")
+            expect(json_response["data"]["my_variable"]).to eq("Hello from FakeController")
+        end
+    end
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+    RSpec.describe "Responses", type: :request do
+        context "quando ocorre uma exceção" do
+            before do
+                allow_any_instance_of(FakesController).to receive(:my_action).and_raise(ActiveRecord::RecordNotFound, "Registro não encontrado")
+            end
 
-## Code of Conduct
+            it "captura ActiveRecord::RecordNotFound e retorna 404" do
+                get "/my_action", headers: { "Accept" => "application/json" }
 
-Everyone interacting in the Otpor project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/otpor/blob/main/CODE_OF_CONDUCT.md).
+                json_response = JSON.parse(response.body)
+
+                expect(response.status).to eq(404)
+                expect(json_response["status"]["name"]).to eq("Not Found")
+                expect(json_response["status"]["type"]).to eq("Client Error")
+                expect(json_response["errors"]).to be_nil
+            end
+        end
+    end
+```
+
+### Coustomizando status e mensagens de erro
+
+```ruby
+    class FakesController < ApplicationController
+        include Otpor::JsonResponse
+
+        def my_action
+            raise ActiveRecord::RecordNotFound, "Registro não encontrado"
+        end
+
+        def my_custom_action
+            render_error(status: 400, type: "Client Error", name: "Bad Request", message: "Requisição inválida")
+        end
+    end
+```
+
+### Metadados de paginação
+
+```ruby
+    class FakesController < ApplicationController
+        include Otpor::JsonResponse
+
+        def my_action_pagination
+            items = TempItem.page(params[:page]).per(10)
+            @meta = {
+            pagination: {
+                total_pages: items.total_pages,
+                total_count: items.total_count,
+                current_page: items.current_page,
+                next_page: items.next_page,
+                prev_page: items.prev_page,
+                per_page: items.limit_value
+            }
+            }
+            render json: items
+        end
+    end
+```
+    
+
+# Developers
+
+[Renan Garcia](https://github.com/renan-garcia),
+[Henrique Max](https://github.com/rickmax)
+
+## Como contribuir?
+
+1. Faça um fork do projeto;
+1. Adicione os devidos ajustes ou melhorias com os respectivos testes;
+1. Envie pull request;
+
+
+## Licença
+
+Está Gem esta disponível sob os termos de licença [MIT License](http://opensource.org/licenses/MIT).
