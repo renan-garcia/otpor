@@ -5,7 +5,10 @@ module Otpor
     included do
       before_action :capture_initial_instance_variables
       around_action :rescue_exceptions
+      rescue_from ActionView::MissingTemplate, with: :handle_missing_partial
     end
+
+    def handle_missing_partial; end
 
     def default_render(*args)
       super and return unless request.format.json?
@@ -22,7 +25,9 @@ module Otpor
         type: http_status_type(@status_code)
       }
 
-      @data_partial ||= "#{controller_path}/#{action_name}" if @status[:type].eql?("Success")
+      partial_exists = lookup_context.exists?("#{controller_path}/#{action_name}", [], true)
+
+      @data_partial ||= "#{controller_path}/#{action_name}" if @status[:type].eql?("Success") && partial_exists
 
       @instance_variables = capture_new_instance_variables
 
