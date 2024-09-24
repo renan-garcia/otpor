@@ -1,135 +1,221 @@
 # Otpor
 
-A gem `otpor` foi desenvolvida para auxiliar no desenvolvimento de aplicações API em Rails, padronizando as respostas JSON. Ela facilita o tratamento de exceções, a customização de status e mensagens de erro, e a inclusão de metadados como paginação nas respostas.
+**Otpor** is a Rails engine designed to enhance the functionality of JSON responses and handle ActiveRecord validation errors in a more structured and consistent way.
 
+## Features
 
-## Instalação
+- **Custom JSON Responses**: Handles the rendering of JSON responses with metadata, status codes, and errors.
+- **Exception Handling**: Catches exceptions and gracefully returns error details in JSON format.
+- **ActiveRecord Validation Error Logging**: Logs validation errors after they occur, providing structured error details for each failed validation.
+- **Request Store**: Uses `RequestStore` to store request-specific data such as errors, status codes, and exception logs.
 
-Adicionando em sua Gemfile:
+## Installation
+
+Add Otpor to your application's Gemfile:
 
 ```ruby
 gem 'otpor'
 ```
 
-Ou instale você mesmo:
+And then execute:
 
-    $ gem install otpor
-
-## Exemplos de uso
-### Em seu controlador
-#### Inclua o módulo `Otpor::JsonResponse` em seu controlador
-
-```ruby
-    class FakesController < ApplicationController
-        include Otpor::JsonResponse
-
-        def my_action
-            @my_variable = "Hello from FakeController"
-            render json: { my_variable: @my_variable }
-        end
-    end
+```bash
+$ bundle install
 ```
 
-### Tratamento de exceções
+Or install it yourself as:
 
-```ruby
-    class FakesController < ApplicationController
-        include Otpor::JsonResponse
-
-        def my_action
-            raise ActiveRecord::RecordNotFound, "Registro não encontrado"
-        end
-    end
+```bash
+$ gem install otpor
 ```
 
-### Teste RSpec
-    
-```ruby
-    RSpec.describe "Responses", type: :request do
-        it "retorna a resposta padrão em JSON usando a gem" do
-            get "/my_action", headers: { "Accept" => "application/json" }
+## Usage
 
-            json_response = JSON.parse(response.body)
+### JSON Response Module
 
-            expect(json_response["status"]["name"]).to eq("OK")
-            expect(json_response["status"]["code"]).to eq(200)
-            expect(json_response["status"]["type"]).to eq("Success")
-            expect(json_response["data"]["my_variable"]).to eq("Hello from FakeController")
-        end
-    end
+The `JsonResponse` module provides a way to handle JSON responses for your Rails controllers. It captures the status code, renders partials if available, and includes metadata or pagination details when necessary.
 
-    RSpec.describe "Responses", type: :request do
-        context "quando ocorre uma exceção" do
-            before do
-                allow_any_instance_of(FakesController).to receive(:my_action).and_raise(ActiveRecord::RecordNotFound, "Registro não encontrado")
-            end
+#### Example:
 
-            it "captura ActiveRecord::RecordNotFound e retorna 404" do
-                get "/my_action", headers: { "Accept" => "application/json" }
-
-                json_response = JSON.parse(response.body)
-
-                expect(response.status).to eq(404)
-                expect(json_response["status"]["name"]).to eq("Not Found")
-                expect(json_response["status"]["type"]).to eq("Client Error")
-                expect(json_response["errors"]).to be_nil
-            end
-        end
-    end
-```
-
-### Coustomizando status e mensagens de erro
+In your controller:
 
 ```ruby
-    class FakesController < ApplicationController
-        include Otpor::JsonResponse
+class MyController < ApplicationController
+  include Otpor::JsonResponse
 
-        def my_action
-            raise ActiveRecord::RecordNotFound, "Registro não encontrado"
-        end
-
-        def my_custom_action
-            render_error(status: 400, type: "Client Error", name: "Bad Request", message: "Requisição inválida")
-        end
-    end
+  def show
+    # Your logic here
+  end
+end
 ```
 
-### Metadados de paginação
+The engine will automatically render a structured JSON response based on the action's results. The following attributes are included:
+
+- **status**: Includes the name, code, and type of the HTTP status.
+- **data**: Renders partials if they exist for the specific controller action.
+- **errors**: Any errors captured during the request.
+- **notes**: Additional notes, if any.
+- **meta**: Pagination or metadata for the response.
+- **exception_log**: Exception details for development environments.
+
+#### Rendering Partials in `data`
+
+To render content inside the `data` field of the JSON response, you must create a partial with the same name as the controller action. For example, if you have an action named `show`, you should create a partial called `_show.json.jbuilder` in the relevant views directory.
+
+Example:
+
+```erb
+# app/views/my_controller/_show.json.jbuilder
+json.extract! @record, :id, :name, :description
+```
+
+When the action executes successfully, this partial will be rendered inside the `data` field of the JSON response.
+
+#### Basic Response Example
+
+Here is an example of a basic JSON response generated by Otpor when there are no errors and a partial exists:
+
+```json
+{
+  "status": {
+    "name": "OK",
+    "code": 200,
+    "type": "Success"
+  },
+  "data": {
+    "partial": {
+      "id": 1,
+      "name": "Item 1",
+      "description": "This is a description."
+    }
+  },
+  "errors": null,
+  "notes": null,
+  "meta": null,
+  "exception_log": null
+}
+```
+
+### Paginating with Kaminari
+
+If you are using **Kaminari** for pagination, Otpor will automatically populate the `meta` field in the JSON response with pagination metadata.
+
+#### Example:
+
+In your controller:
 
 ```ruby
-    class FakesController < ApplicationController
-        include Otpor::JsonResponse
+class MyController < ApplicationController
+  include Otpor::JsonResponse
 
-        def my_action_pagination
-            items = TempItem.page(params[:page]).per(10)
-            @meta = {
-            pagination: {
-                total_pages: items.total_pages,
-                total_count: items.total_count,
-                current_page: items.current_page,
-                next_page: items.next_page,
-                prev_page: items.prev_page,
-                per_page: items.limit_value
-            }
-            }
-            render json: items
-        end
-    end
+  def index
+    @items = Item.page(params[:page])
+  end
+end
 ```
-    
 
-# Developers
+#### Example of Paginated JSON Response:
 
-[Renan Garcia](https://github.com/renan-garcia),
-[Henrique Max](https://github.com/rickmax)
+```json
+{
+  "status": {
+    "name": "OK",
+    "code": 200,
+    "type": "Success"
+  },
+  "data": {
+    "partial": [
+      { "id": 1, "name": "Item 1" },
+      { "id": 2, "name": "Item 2" }
+    ]
+  },
+  "errors": null,
+  "notes": null,
+  "meta": {
+    "pagination": {
+      "total_pages": 10,
+      "total_count": 100,
+      "current_page": 1,
+      "next_page": 2,
+      "prev_page": null,
+      "per_page": 10
+    }
+  },
+  "exception_log": null
+}
+```
 
-## Como contribuir?
+### ActiveRecord Validation Error Handling
 
-1. Faça um fork do projeto;
-1. Adicione os devidos ajustes ou melhorias com os respectivos testes;
-1. Envie pull request;
+The `ActiveRecordValidationError` module logs all validation errors after they occur and stores them in the request for easy access. This module is intended to be included in controllers to handle validation errors from ActiveRecord.
 
+#### Example:
 
-## Licença
+In your controller:
 
-Está Gem esta disponível sob os termos de licença [MIT License](http://opensource.org/licenses/MIT).
+```ruby
+class MyController < ApplicationController
+  include Otpor::ActiveRecordValidationError
+
+  def create
+    # Your logic here
+    @record = MyModel.new(record_params)
+    if @record.save
+      # success logic
+    else
+      # validation errors will be captured automatically
+    end
+  end
+end
+```
+
+Whenever validation errors occur, they will be captured and stored in `RequestStore`, which can then be accessed and returned in the JSON response.
+
+### Example JSON Response for Validation Errors
+
+```json
+{
+  "status": {
+    "name": "Unprocessable Entity",
+    "code": 422,
+    "type": "Client Error"
+  },
+  "data": null,
+  "errors": [
+    {
+      "attribute": "name",
+      "message": "can't be blank",
+      "type": "validation",
+      "entity": "MyModel",
+      "entity_id": "new record"
+    }
+  ],
+  "notes": null,
+  "meta": null,
+  "exception_log": null
+}
+```
+
+## Development
+
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+
+To install this gem onto your local machine, run:
+
+```bash
+$ bundle exec rake install
+```
+
+## How to Contribute?
+
+1. Fork the project;
+1. Make the necessary adjustments or improvements along with the corresponding tests;
+1. Submit a pull request;
+
+## Developers
+
+[Renan Garcia](https://github.com/renan-garcia)
+
+## License
+
+This gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
