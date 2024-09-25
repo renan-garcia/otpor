@@ -55,7 +55,7 @@ The engine will automatically render a structured JSON response based on the act
 - **data**: Renders partials if they exist for the specific controller action.
 - **errors**: Any errors captured during the request.
 - **notes**: Additional notes, if any.
-- **meta**: Pagination or metadata for the response.
+- **meta**: Pagination and metadata for the response.
 - **exception_log**: Exception details for development environments.
 
 #### Rendering Partials in `data`
@@ -140,6 +140,38 @@ end
       "prev_page": null,
       "per_page": 10
     }
+  },
+  "exception_log": null
+}
+```
+
+### API Versioning
+
+If you are building an API and need to version your responses, Otpor will automatically include the API version in the JSON response.
+
+#### Example:
+
+Your URL might look like this: `http://example.com/api/v1/items`.
+
+Here is an example of a JSON response with API versioning:
+
+```json
+{
+  "status": {
+    "name": "OK",
+    "code": 200,
+    "type": "Success"
+  },
+  "data": {
+    "partial": [
+      { "id": 1, "name": "Item 1" },
+      { "id": 2, "name": "Item 2" }
+    ]
+  },
+  "errors": null,
+  "notes": null,
+  "meta": {
+    "api_version": "v1"
   },
   "exception_log": null
 }

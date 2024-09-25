@@ -7,7 +7,7 @@ class FakesController < ActionController::API
 
   def my_action_custom_status
     RequestStore.store[:status_symbol] = :unprocessable_content
-    RequestStore.store[:errors] = [{ message: "Dados inválidos" }]
+    RequestStore.store[:errors] = [{ message: "Invalid data" }]
     default_render
   end
 

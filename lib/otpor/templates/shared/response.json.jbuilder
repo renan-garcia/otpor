@@ -11,4 +11,5 @@ end
 json.errors @errors
 json.notes @notes
 json.meta @meta
+json.api_version @api_version if @api_version.present?
 json.exception_log @exception_log

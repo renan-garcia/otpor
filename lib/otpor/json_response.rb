@@ -103,7 +103,23 @@ module Otpor
     end
 
     def infer_meta
-      @instance_variables.each do |key, value|
+      pagination = infer_pagination
+      api_version = infer_api_version
+
+      return nil if pagination.nil? && api_version.nil?
+
+      meta = {}
+      meta = meta.merge(pagination) if pagination.present?
+      meta = meta.merge(api_version) if api_version.present?
+      meta
+    end
+
+    def infer_api_version
+      { api_version: "v#{::Regexp.last_match(1)}" } if request.path =~ %r{/v(\d+)/}
+    end
+
+    def infer_pagination
+      @instance_variables.each do |_key, value|
         next unless value.respond_to?(:total_pages)
 
         return {
