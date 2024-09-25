@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.license       = "MIT"
 
   spec.metadata = {
-    "changelog_uri" => "https://github.com/renan-garcia/otpor/main/CHANGELOG.md",
+    "changelog_uri" => "https://github.com/renan-garcia/otpor/blob/main/CHANGELOG.md",
     "source_code_uri" => "https://github.com/renan-garcia/otpor/",
     "rubygems_mfa_required" => "true"
   }
