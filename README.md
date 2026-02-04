@@ -141,9 +141,32 @@ end
 }
 ```
 
+#### Custom Pagination
+
+You can also set `@pagination` manually in your controller to override the automatic inference:
+
+```ruby
+class MyController < ApplicationController
+  include Otpor::JsonResponse
+
+  def index
+    @pagination = {
+      pagination: {
+        total_pages: 5,
+        total_count: 50,
+        current_page: 2,
+        next_page: 3,
+        prev_page: 1,
+        per_page: 10
+      }
+    }
+  end
+end
+```
+
 ### API Versioning
 
-If you are building an API and need to version your responses, Otpor will automatically include the API version in the JSON response.
+If you are building an API and need to version your responses, Otpor will automatically include the API version in the JSON response based on the URL pattern (e.g., `/v1/`, `/v2/`).
 
 #### Example:
 
@@ -166,6 +189,71 @@ Here is an example of a JSON response with API versioning:
   "notes": null,
   "meta": {
     "api_version": "v1"
+  },
+  "exception_log": null
+}
+```
+
+#### Custom API Version
+
+You can also set `@api_version` manually in your controller to override the automatic inference:
+
+```ruby
+class MyController < ApplicationController
+  include Otpor::JsonResponse
+
+  def index
+    @api_version = { api_version: "v2" }
+  end
+end
+```
+
+### Custom Meta (Pagination + API Version)
+
+You can set both `@pagination` and `@api_version` manually to have full control over the `meta` field:
+
+```ruby
+class MyController < ApplicationController
+  include Otpor::JsonResponse
+
+  def index
+    @pagination = {
+      pagination: {
+        total_pages: 3,
+        total_count: 30,
+        current_page: 1,
+        next_page: 2,
+        prev_page: nil,
+        per_page: 10
+      }
+    }
+    @api_version = { api_version: "v3" }
+  end
+end
+```
+
+This will produce a response with both custom values in the `meta` field:
+
+```json
+{
+  "status": {
+    "name": "OK",
+    "code": 200,
+    "type": "Success"
+  },
+  "data": [...],
+  "errors": null,
+  "notes": null,
+  "meta": {
+    "pagination": {
+      "total_pages": 3,
+      "total_count": 30,
+      "current_page": 1,
+      "next_page": 2,
+      "prev_page": null,
+      "per_page": 10
+    },
+    "api_version": "v3"
   },
   "exception_log": null
 }

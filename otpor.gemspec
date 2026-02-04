@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "jbuilder", ">= 2.12.0"
   spec.add_dependency "kaminari", ">= 1.2.2"
-  spec.add_dependency "rails", ">= 5.0.0"
+  spec.add_dependency "rails", ">= 7.2.0"
   spec.add_dependency "request_store", ">= 1.7"
   spec.add_development_dependency "rspec"
   spec.add_development_dependency "rspec-rails"

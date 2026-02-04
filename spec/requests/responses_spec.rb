@@ -91,4 +91,53 @@ RSpec.describe "Responses", type: :request do
       Object.send(:remove_const, :TempItem) if defined?(TempItem)
     end
   end
+
+  context "when @pagination is set manually" do
+    it "uses the custom pagination instead of inferring" do
+      get "/my_action_custom_pagination", headers: { "Accept" => "application/json" }
+
+      json_response = JSON.parse(response.body)
+
+      expect(json_response["meta"]).to include(
+        "pagination" => {
+          "total_pages" => 5,
+          "total_count" => 50,
+          "current_page" => 2,
+          "next_page" => 3,
+          "prev_page" => 1,
+          "per_page" => 10
+        }
+      )
+    end
+  end
+
+  context "when @api_version is set manually" do
+    it "uses the custom API version instead of inferring from URL" do
+      get "/my_action_custom_api_version", headers: { "Accept" => "application/json" }
+
+      json_response = JSON.parse(response.body)
+
+      expect(json_response["meta"]["api_version"]).to eq("v2")
+    end
+  end
+
+  context "when both @pagination and @api_version are set manually" do
+    it "uses both custom values in meta" do
+      get "/my_action_custom_meta", headers: { "Accept" => "application/json" }
+
+      json_response = JSON.parse(response.body)
+
+      expect(json_response["meta"]).to include(
+        "pagination" => {
+          "total_pages" => 3,
+          "total_count" => 30,
+          "current_page" => 1,
+          "next_page" => 2,
+          "prev_page" => nil,
+          "per_page" => 10
+        },
+        "api_version" => "v3"
+      )
+    end
+  end
 end

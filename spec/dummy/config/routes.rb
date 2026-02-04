@@ -17,6 +17,9 @@ Rails.application.routes.draw do
   get '/my_action', to: 'fakes#my_action'
   get '/my_action_custom_status', to: 'fakes#my_action_custom_status'
   get '/my_action_pagination', to: 'fakes#my_action_pagination'
+  get '/my_action_custom_pagination', to: 'fakes#my_action_custom_pagination'
+  get '/my_action_custom_api_version', to: 'fakes#my_action_custom_api_version'
+  get '/my_action_custom_meta', to: 'fakes#my_action_custom_meta'
 
   get 'v1/fakes/my_action', to: 'v1/fakes#my_action'
 end

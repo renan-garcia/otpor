@@ -11,3 +11,7 @@ gem "rubocop", "~> 1.21"
 
 gem "rspec"
 gem "rspec-rails"
+gem "sqlite3", "~> 2.0"
+gem "jbuilder"
+gem "request_store"
+gem "kaminari"

@@ -94,7 +94,7 @@ module Otpor
       current_instance_variables = instance_variables
       new_vars = current_instance_variables - @initial_instance_variables
       new_vars -= %i[@initial_instance_variables @errors @notes @data_partial @status
-                     @_response_body @new_instance_variables]
+                     @_response_body @new_instance_variables @pagination @api_version]
       new_instance_vars = {}
       new_vars.each do |var|
         new_instance_vars[var] = instance_variable_get(var)
@@ -103,8 +103,10 @@ module Otpor
     end
 
     def infer_meta
-      pagination = infer_pagination
-      api_version = infer_api_version
+      pagination = @pagination if @pagination.present?
+      pagination ||= infer_pagination
+      api_version = @api_version if @api_version.present?
+      api_version ||= infer_api_version
 
       return nil if pagination.nil? && api_version.nil?
 
